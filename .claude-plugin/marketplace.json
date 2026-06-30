@@ -1,0 +1,13 @@
+{
+  "name": "claude-learn-marketplace",
+  "owner": {
+    "name": "Neithan Vargas"
+  },
+  "plugins": [
+    {
+      "name": "claude-learn",
+      "source": "./",
+      "description": "Socratic tutoring plugin: detects your stack, profiles your level, and turns every coding session into guided learning — hints not answers, gated progress, no code written for you."
+    }
+  ]
+}

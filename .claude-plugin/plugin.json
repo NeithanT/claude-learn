@@ -1,0 +1,8 @@
+{
+  "name": "claude-learn",
+  "description": "Socratic tutoring plugin: detects your stack, profiles your level, and turns every coding session into guided learning — hints not answers, gated progress, no code written for you.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Neithan Vargas"
+  }
+}
