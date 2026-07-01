@@ -19,6 +19,12 @@ Under no circumstances will the AI write code or hand over a complete solution. 
 
 That's it — the commands and hooks are active immediately.
 
+**Note on command names:** Claude Code always namespaces plugin commands as
+`/<plugin-name>:<command-name>` to avoid collisions between plugins (this is true both via
+`--plugin-dir` and after a marketplace install — it's not a quirk of local testing). So invoke
+commands as `/claude-learn:learn`, `/claude-learn:hint`, `/claude-learn:check`, etc. — the bare
+`/learn` form won't resolve.
+
 **Testing locally without publishing?** Clone the repo and point Claude Code at it directly:
 
 ```
@@ -30,7 +36,12 @@ claude --plugin-dir ./claude-learn
 
 **Layer 1 — Project Profile** (always-on). Run `/learn` once in a project. The plugin detects your stack, profiles your current knowledge level per language/framework, and from that point on every coding conversation in the project is Socratic. Claude calibrates its guidance to your level and tracks the concepts you struggle with. Progress is saved across sessions.
 
-**Layer 2 — Topic Lessons** (on-demand). `/learn <topic>` starts a structured, step-by-step lesson plan. You can't advance to the next step without demonstrating genuine understanding via `/check`. Claude will also offer to scaffold an `exercises/` folder with any starter files or data the lesson needs. Progress is saved across sessions.
+**Layer 2 — Topic Lessons** (on-demand). `/learn <topic>` starts a structured, step-by-step lesson plan. Each step runs a two-phase cycle that repeats all the way through the plan:
+
+1. **Mini Lesson** — Claude teaches the concept directly: a short, warm explanation with an everyday analogy, before any question is asked.
+2. **Problem Solving** — Claude poses a Socratic question that makes you apply what you just learned. You can't advance to the next step without demonstrating genuine understanding via `/check`.
+
+Then it repeats: Mini Lesson for the next step, Problem Solving for the next step, and so on. Claude will also offer to scaffold an `exercises/` folder with any starter files or data the lesson needs. Progress (including which phase you're in) is saved across sessions.
 
 Both layers track what you know per topic on a 1–10 scale and steer you toward your weakest areas.
 
@@ -50,14 +61,19 @@ Claude will detect your stack (Java, Python, React, etc.), ask a few quick quest
 /learn binary search trees advanced
 ```
 
+To set difficulty, include the word `beginner`, `intermediate`, or `advanced` anywhere in
+the command (it's pulled out as a whole word, so it won't get confused with similar-looking
+topic words). If you leave it out, Claude infers it from your profile level for that
+language/framework, or asks you directly rather than silently guessing `intermediate`.
+
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `/learn` | Initialize project profile — detects stack, sets knowledge levels |
-| `/learn <topic> [difficulty]` | Start a guided lesson. Difficulty: `beginner`, `intermediate` (default), `advanced` |
-| `/hint` | Get the next hint (1st time: directional, 2nd time: structural, 3rd time: near-explicit or partial solution) |
-| `/check` | Submit your understanding for evaluation — gates step progression |
+| `/learn <topic> [difficulty]` | Start a guided lesson. Difficulty: `beginner`, `intermediate`, `advanced` — inferred from your profile or asked if omitted |
+| `/hint` | Get the next hint (1st time: directional, 2nd time: structural, 3rd time: near-explicit or partial solution). Only applies once you're in the Problem Solving phase |
+| `/check` | Submit your understanding for evaluation — gates step progression. Only applies once you're in the Problem Solving phase |
 | `/progress` | See your knowledge profile, active lesson status, and reinforcement queue |
 | `/explain <concept>` | Get a concept explained without solving your current step |
 | `/reinforce` | Targeted session on your highest-priority weak concept |
@@ -65,8 +81,11 @@ Claude will detect your stack (Java, Python, React, etc.), ask a few quick quest
 ## What Claude Will and Won't Do
 
 **Will do:**
-- Ask questions that guide your thinking (Socratic method)
-- Calibrate depth to your knowledge level (beginner gets analogies; advanced gets trade-offs)
+- Teach each new concept directly in a short Mini Lesson before asking you to apply it
+- Ask questions that guide your thinking (Socratic method) during Problem Solving — one
+  small question at a time, in a warm, CS50-style teaching voice
+- Calibrate depth to your knowledge level (beginner gets everyday analogies and plain
+  language; advanced gets trade-offs and edge cases)
 - Give progressively more specific hints — never the full answer
 - Evaluate whether you *understand* (not just whether output is correct)
 - Track weak concepts and surface them for reinforcement
@@ -101,11 +120,27 @@ of hooks (in `hooks/`):
 The plugin only enforces in projects that have run `/learn` (where `.claude-learn/profile.json`
 exists). In any other project the hooks stay silent and don't interfere.
 
+## Known Limitation: Terminal Autocomplete
+
+Some terminals and shells offer ghost-text or history-based autosuggestions as you type —
+ahead of what you've actually typed, they'll show a plausible completion pulled from prior
+input. During a Socratic exchange, this can pre-fill a guessable answer into the prompt box
+before you've worked it out yourself, which undercuts the whole point of the exercise.
+
+This is outside the plugin's control. `claude-learn`'s hooks (`SessionStart`,
+`UserPromptSubmit`, `PreToolUse`, `Stop`) only run on submit or tool-use — there's no hook
+that fires at keystroke time, so the plugin has no way to intercept or suppress
+autosuggested text before you send it.
+
+If you use a shell autosuggestion plugin (e.g. `zsh-autosuggestions`, fish's built-in
+suggestions), consider disabling it — or simply avoid pressing Tab/→/End to accept ghost
+text — while working through a lesson, so you only ever submit what you actually typed.
+
 ## State Files
 
 Both files live in `.claude-learn/` inside your project directory:
 
 - `profile.json` — knowledge profile: languages, frameworks, levels, mastered/weak concepts, reinforcement queue
-- `state.json` — active lesson state: current topic, step, hints used, completed steps
+- `state.json` — active lesson state: current topic, step, phase (`mini_lesson` or `problem_solving`), hints used, completed steps
 
 A `.claude/CLAUDE.md` is also written to the project to make Socratic mode persistent across all sessions.

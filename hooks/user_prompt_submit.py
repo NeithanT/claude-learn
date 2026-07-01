@@ -27,7 +27,9 @@ ANSWER_DEMAND = re.compile(
 
 REMINDER = (
     "[Claude Learn] Socratic mode is on: guide with questions and the /hint ladder; "
-    "do not write the student's code or paste complete solutions."
+    "do not write the student's code or paste complete solutions. Keep the CS50-style "
+    "warm, friendly voice — one small concrete question at a time, analogies before "
+    "jargon, no stacked sub-questions."
 )
 
 REFUSAL = (

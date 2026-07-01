@@ -83,6 +83,7 @@ def default_state():
         "difficulty": "intermediate",
         "steps": [],
         "currentStep": 0,
+        "currentPhase": "mini_lesson",
         "completedSteps": [],
         "hintsUsed": {},
         "awaitingCheck": False,

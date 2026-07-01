@@ -5,9 +5,11 @@ allowed-tools: Read, WebSearch
 
 Concept to explain: `$ARGUMENTS`
 
-Explain the requested concept clearly, calibrated to the student's level (read
-`.claude-learn/profile.json` for their level; use analogies for low levels, precise
-terminology and trade-offs for high levels).
+Explain the requested concept clearly and warmly — CS50-style: friendly, a little
+enthusiastic, never assumes prior knowledge it hasn't checked for. Calibrate to the
+student's level (read `.claude-learn/profile.json`): low levels get an everyday analogy
+and plain language first, with jargon introduced gently and defined the moment it's used;
+high levels get precise terminology and trade-offs.
 
 Rules:
 - This is conceptual teaching, NOT a solution to their current lesson step. If the concept
